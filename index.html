@@ -305,7 +305,7 @@ const DEFAULT_SUBS={
   "프로모션":["전사프로모션","노크잇 프로모션","패션 연합프로모션","팀 주관프로모션","브랜드 DAY","신상위크"],
   "컨사인먼트":["브랜드 단독","브랜드 연합"],
   "라이브":["연합라이브","단독라이브"],
-  "노출편성":["쇼핑판 최상단(썸)","쇼핑판 최상단(텍)","패션뷰티 최상단","패션뷰티 수동콘텐츠","윈도상세","노크잇"],
+  "노출편성":["쇼핑판 최상단(썸)","쇼핑판 최상단(텍)","패션뷰티 최상단","패션뷰티 수동콘텐츠","윈도상세","노크잇","네플스 홈"],
   "개인일정":["연차","미팅","기타"]
 };
 /* 2026 한국 공휴일 */
@@ -544,6 +544,11 @@ async function initApp(){
   nextId=Math.max(0,...items.map(p=>p.id||0))+1;
   const subsVal=subsSnap.val();
   if(subsVal){Object.keys(subsVal).forEach(cat=>{if(Array.isArray(subsVal[cat]))CAT_SUBS[cat]=subsVal[cat];});}
+  /* === 중분류 자동 추가 (네플스 홈) === */
+  if(Array.isArray(CAT_SUBS["노출편성"])&&!CAT_SUBS["노출편성"].includes("네플스 홈")){
+    CAT_SUBS["노출편성"].push("네플스 홈");
+    fbDB.ref(FB_PATH+'/subs/노출편성').set(CAT_SUBS["노출편성"]);
+  }
   render();
   /* 실시간 동기화: 다른 기기에서 수정하면 자동 반영 */
   fbDB.ref(FB_PATH+'/items').on('value',snap=>{
