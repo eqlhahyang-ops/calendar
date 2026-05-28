@@ -206,6 +206,12 @@ body { font-family: 'NanumSquareNeo', 'Apple SD Gothic Neo', 'Malgun Gothic', Ar
           <input id="f-multiDateInput" type="date" style="flex:1;">
           <button type="button" onclick="addMultiDate()" class="btn-save" style="padding:6px 12px;font-size:11px;">+ 추가</button>
         </div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
+          <input id="f-rangeStart" type="date" style="flex:1;" title="기간 시작일">
+          <span style="font-size:11px;color:#999;">~</span>
+          <input id="f-rangeEnd" type="date" style="flex:1;" title="기간 종료일">
+          <button type="button" onclick="addDateRange()" class="btn-save" style="padding:6px 12px;font-size:11px;background:#7B6EAC;">📅 기간으로 추가</button>
+        </div>
         <div id="multiDateList" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
       </div>
       <div class="form-group" id="timeStartGroup" style="display:none;"><label>시작 시간</label><input id="f-timeStart" type="time" value="09:00"></div>
@@ -892,6 +898,24 @@ function addMultiDate(){
   if(!v)return;
   if(!multiDates.includes(v))multiDates.push(v);
   inp.value='';renderMultiDates();
+}
+function addDateRange(){
+  const s=document.getElementById('f-rangeStart').value;
+  const e=document.getElementById('f-rangeEnd').value;
+  if(!s||!e){alert('시작일과 종료일을 모두 입력해주세요.');return;}
+  if(s>e){alert('시작일이 종료일보다 늦을 수 없습니다.');return;}
+  let count=0;
+  const cur=new Date(s+'T00:00:00');
+  const end=new Date(e+'T00:00:00');
+  while(cur<=end){
+    const ds=cur.getFullYear()+'-'+String(cur.getMonth()+1).padStart(2,'0')+'-'+String(cur.getDate()).padStart(2,'0');
+    if(!multiDates.includes(ds)){multiDates.push(ds);count++;}
+    cur.setDate(cur.getDate()+1);
+  }
+  document.getElementById('f-rangeStart').value='';
+  document.getElementById('f-rangeEnd').value='';
+  renderMultiDates();
+  showToast(count+'개 날짜 추가됨');
 }
 function removeMultiDate(i){multiDates.splice(i,1);renderMultiDates();}
 
