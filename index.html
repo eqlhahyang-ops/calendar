@@ -201,10 +201,18 @@ body { font-family: 'NanumSquareNeo', 'Apple SD Gothic Neo', 'Malgun Gothic', Ar
       <div class="form-group" id="grpStart"><label>시작일</label><input id="f-start" type="date" value="2026-04-08"></div>
       <div class="form-group" id="grpEnd"><label>종료일</label><input id="f-end" type="date" value="2026-04-08"></div>
       <div class="form-group full" id="grpMultiDate" style="display:none;">
-        <label>편성 날짜 (복수 선택)</label>
-        <div style="display:flex;gap:6px;margin-bottom:6px;">
+        <label>편성 날짜</label>
+        <div style="display:flex;gap:6px;margin-bottom:5px;align-items:center;">
+          <span style="font-size:10px;color:#888;white-space:nowrap;">날짜 단일</span>
           <input id="f-multiDateInput" type="date" style="flex:1;">
           <button type="button" onclick="addMultiDate()" class="btn-save" style="padding:6px 12px;font-size:11px;">+ 추가</button>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
+          <span style="font-size:10px;color:#888;white-space:nowrap;">기간 추가</span>
+          <input id="f-rangeStart" type="date" style="flex:1;">
+          <span style="font-size:11px;color:#aaa;">~</span>
+          <input id="f-rangeEnd" type="date" style="flex:1;">
+          <button type="button" onclick="addDateRange()" class="btn-save" style="padding:6px 12px;font-size:11px;">+ 추가</button>
         </div>
         <div id="multiDateList" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
       </div>
@@ -305,7 +313,7 @@ const DEFAULT_SUBS={
   "프로모션":["전사프로모션","노크잇 프로모션","패션 연합프로모션","팀 주관프로모션","브랜드 DAY","신상위크"],
   "컨사인먼트":["브랜드 단독","브랜드 연합"],
   "라이브":["연합라이브","단독라이브"],
-  "노출편성":["쇼핑판 최상단(썸)","쇼핑판 최상단(텍)","패션뷰티 최상단","패션뷰티 수동콘텐츠","윈도상세","노크잇"],
+  "노출편성":["쇼핑판 최상단(썸)","쇼핑판 최상단(텍)","패션뷰티 최상단","패션뷰티 수동콘텐츠","윈도상세","노크잇","네플스 홈배너"],
   "개인일정":["연차","미팅","기타"]
 };
 /* 2026 한국 공휴일 */
@@ -442,7 +450,9 @@ const DEFAULT_DATA=[
 {cat:"프로모션",sub:"노크잇 프로모션",name:"마리떼 프랑소와 저버 놐다운 오늘의브랜드",start:"2026-06-15",end:"2026-06-21",status:"진행예정",priority:"important",memo:"목표 4억 / 유니섹스 / 오늘의브랜드 라이브 6/17(수) 19시, 노크잇 최상단 배너, 쇼핑판/네플쇼 연계",color:"#5A9E97"},
 /* ===== 6월 라이브 ===== */
 {cat:"라이브",sub:"단독라이브",name:"커버낫 오늘의브랜드 라이브",start:"2026-06-14",end:"2026-06-14",status:"진행예정",priority:"",memo:"19시 / 라이브 담당: 박나은 / 놐다운 오늘의브랜드 연계",color:"#BC7278"},
-{cat:"라이브",sub:"단독라이브",name:"마리떼 프랑소와 저버 오늘의브랜드 라이브",start:"2026-06-17",end:"2026-06-17",status:"진행예정",priority:"",memo:"19시 / 라이브 담당: 양부용 / 놐다운 오늘의브랜드 연계",color:"#BC7278"}
+{cat:"라이브",sub:"단독라이브",name:"마리떼 프랑소와 저버 오늘의브랜드 라이브",start:"2026-06-17",end:"2026-06-17",status:"진행예정",priority:"",memo:"19시 / 라이브 담당: 양부용 / 놐다운 오늘의브랜드 연계",color:"#BC7278"},
+/* ===== 6월 네플스 홈배너 ===== */
+{cat:"노출편성",sub:"네플스 홈배너",name:"먼슬리 노크",start:"2026-06-24",end:"2026-06-30",status:"진행예정",priority:"",memo:"",color:"#7A9E5A"}
 ];
 
 const yearStart=new Date(YEAR,3,6); /* 2026-04-06 시작 */
@@ -897,6 +907,22 @@ function addMultiDate(){
   if(!v)return;
   if(!multiDates.includes(v))multiDates.push(v);
   inp.value='';renderMultiDates();
+}
+function addDateRange(){
+  const s=document.getElementById('f-rangeStart').value;
+  const e=document.getElementById('f-rangeEnd').value;
+  if(!s||!e){alert('시작일과 종료일을 모두 입력해주세요.');return;}
+  if(s>e){alert('시작일이 종료일보다 늦을 수 없습니다.');return;}
+  let cur=new Date(s+'T00:00:00');
+  const end=new Date(e+'T00:00:00');
+  while(cur<=end){
+    const d=cur.toISOString().slice(0,10);
+    if(!multiDates.includes(d))multiDates.push(d);
+    cur.setDate(cur.getDate()+1);
+  }
+  document.getElementById('f-rangeStart').value='';
+  document.getElementById('f-rangeEnd').value='';
+  renderMultiDates();
 }
 function removeMultiDate(i){multiDates.splice(i,1);renderMultiDates();}
 
