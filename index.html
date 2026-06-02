@@ -468,9 +468,12 @@ const catLegend=document.getElementById('catLegend');
 Object.entries(CAT_COLORS).forEach(([k,v])=>{catLegend.innerHTML+=`<div class="legend-item"><div class="legend-dot" style="background:${v};"></div>${k}</div>`;});
 
 /* === 주 단위 접기/펴기 === */
-const COLLAPSED_W=4;
-const collapsedWeeks=(function(){try{const s=localStorage.getItem('collapsedWeeks2026');return s?new Set(JSON.parse(s)):new Set();}catch(e){return new Set();}})();
-function saveCollapsedWeeks(){localStorage.setItem('collapsedWeeks2026',JSON.stringify([...collapsedWeeks]));}
+const COLLAPSED_W=2;
+const collapsedWeeks=new Set();
+function saveCollapsedWeeks(){
+  try{localStorage.setItem('collapsedWeeks2026',JSON.stringify([...collapsedWeeks]));}catch(e){}
+  fbDB.ref(FB_PATH+'/collapsedWeeks').set([...collapsedWeeks]);
+}
 function getWeekKey(dayIdx){const d=new Date(yearStart.getTime()+dayIdx*86400000);const mon=new Date(d);mon.setDate(d.getDate()-(d.getDay()||7)+1);return mon.toISOString().slice(0,10);}
 function buildDayPositions(){
   const pos=[],widths=[];
@@ -538,11 +541,17 @@ let nextId=1;
 
 async function initApp(){
   showToast('불러오는 중…');
-  const [itemsSnap,subsSnap,delSnap]=await Promise.all([
+  const [itemsSnap,subsSnap,delSnap,cwSnap]=await Promise.all([
     fbDB.ref(FB_PATH+'/items').once('value'),
     fbDB.ref(FB_PATH+'/subs').once('value'),
-    fbDB.ref(FB_PATH+'/deletedDefaults').once('value')
+    fbDB.ref(FB_PATH+'/deletedDefaults').once('value'),
+    fbDB.ref(FB_PATH+'/collapsedWeeks').once('value')
   ]);
+  /* 접힌 주 복원 (Firebase 우선, 없으면 localStorage) */
+  collapsedWeeks.clear();
+  const cwVal=cwSnap.val();
+  if(cwVal&&Array.isArray(cwVal)){cwVal.forEach(w=>collapsedWeeks.add(w));}
+  else{try{const s=localStorage.getItem('collapsedWeeks2026');if(s)JSON.parse(s).forEach(w=>collapsedWeeks.add(w));}catch(e){}}
   const deleted=delSnap.val()||[];
   if(itemsSnap.val()){
     items=itemsSnap.val();
@@ -618,7 +627,7 @@ function render(){
       const collapsed=collapsedWeeks.has(curWk);
       const bg=wkMonth%2===0?'#f0f0f0':'#e4e4e4';
       const label=`${wkMonth}/${wkFirstDay}~${wkLastDay}`;
-      wkH+=`<div onclick="toggleWeek('${curWk}')" style="width:${wkW}px;min-width:${wkW}px;height:20px;line-height:20px;text-align:center;font-size:10px;font-weight:700;cursor:pointer;background:${bg};border-right:1px solid #ccc;color:#333;user-select:none;overflow:hidden;" title="${collapsed?'펼치기':'접기'}: ${wkMonth}월 ${wkFirstDay}~${wkLastDay}일">${collapsed?'▶ '+wkMonth+'월':label}</div>`;
+      wkH+=`<div onclick="toggleWeek('${curWk}')" style="width:${wkW}px;min-width:${wkW}px;height:20px;line-height:20px;text-align:center;font-size:9px;font-weight:700;cursor:pointer;background:${collapsed?'#c8c8c8':bg};border-right:1px solid #bbb;color:${collapsed?'#555':'#333'};user-select:none;overflow:hidden;writing-mode:${collapsed?'vertical-rl':'horizontal-tb'};" title="${collapsed?'펼치기':'접기'}: ${wkMonth}월 ${wkFirstDay}~${wkLastDay}일">${collapsed?wkMonth+'월':label}</div>`;
     }
     if(i>=totalDays)break;
     if(wk!==curWk){curWk=wk;wkW=0;const d=new Date(yearStart.getTime()+i*86400000);wkMonth=d.getMonth()+1;wkFirstDay=d.getDate();}
