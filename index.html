@@ -779,11 +779,13 @@ function toggleTimeFields(){
   document.getElementById('grpRepeatUntil').style.display=(isPersonal&&document.getElementById('f-repeat').value)?'':'none';
   const isExposure=(cat==='노출편성');
   const isWindow=(isExposure&&sub==='윈도상세');
+  const isNormalDateSub=(sub==='노크잇'||sub==='네플스 홈배너');
+  const useMultiDate=(isExposure&&!isWindow&&!isNormalDateSub);
   const showLiveLink=(cat==='프로모션'||cat==='컨사인먼트');
-  document.getElementById('grpStart').style.display=(isExposure&&!isWindow)?'none':'';
-  document.getElementById('grpEnd').style.display=(isExposure&&!isWindow)?'none':'';
-  document.getElementById('grpEnd').querySelector('label').textContent=isWindow?'종료일 (선택)':'종료일';
-  document.getElementById('grpMultiDate').style.display=(isExposure&&!isWindow)?'':'none';
+  document.getElementById('grpStart').style.display=useMultiDate?'none':'';
+  document.getElementById('grpEnd').style.display=useMultiDate?'none':'';
+  document.getElementById('grpEnd').querySelector('label').textContent=(isWindow||isNormalDateSub)?'종료일 (선택)':'종료일';
+  document.getElementById('grpMultiDate').style.display=useMultiDate?'':'none';
   document.getElementById('grpLiveLink').style.display=showLiveLink?'':'none';
   if(!showLiveLink){document.getElementById('f-liveCheck').checked=false;document.getElementById('liveLinkFields').style.display='none';}
 }
@@ -821,10 +823,12 @@ function saveItem(){
   const hasTime=(cat_==='라이브'||(cat_==='개인일정'&&(sub_==='미팅'||sub_==='기타')));
   const isExposure=(cat_==='노출편성');
   const isWindow=(isExposure&&sub_==='윈도상세');
+  const isNormalDateSub_=(sub_==='노크잇'||sub_==='네플스 홈배너');
+  const useMultiDate_=(isExposure&&!isWindow&&!isNormalDateSub_);
   const name_=document.getElementById('f-name').value.trim();
   if(!name_){alert('일정명을 입력해주세요.');return;}
   /* 노출편성 복수날짜 처리 */
-  if(isExposure&&!isWindow&&editingId===null){
+  if(useMultiDate_&&editingId===null){
     if(multiDates.length===0){alert('편성 날짜를 1개 이상 추가해주세요.');return;}
     const cc_=document.getElementById('f-color-label').textContent==='자동'?'':document.getElementById('f-color').value;
     const sortedDates=multiDates.slice().sort();
@@ -925,7 +929,7 @@ function addDateRange(){
   let cur=new Date(s+'T00:00:00');
   const end=new Date(e+'T00:00:00');
   while(cur<=end){
-    const d=cur.toISOString().slice(0,10);
+    const d=`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
     if(!multiDates.includes(d))multiDates.push(d);
     cur.setDate(cur.getDate()+1);
   }
